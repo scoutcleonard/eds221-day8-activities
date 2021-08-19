@@ -1,0 +1,75 @@
+---
+title: "SF Greenhouse Gas"
+author: "Scout Leonard"
+date: "8/18/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(here)
+library(janitor)
+
+library(patchwork)
+library(ggrepel)
+library(gghighlight)
+library(paletteer)
+library(ggExtra)
+library(ggbeeswarm)
+
+sf_emissions <- read_csv(here::here("data", "San_Francisco_Communitywide_Greenhouse_Gas_Inventory.csv"))
+```
+
+### 1.) Summary Table of Total Annual Greenhouse Gas Emissions by Sector
+```{r}
+emissions_sector_summary <- sf_emissions %>% 
+  group_by(Sector_General) %>% 
+  summarize(Emissions_mtCO2e = n())
+```
+
+### 2.) Summary Table of Total Annual Greenhouse Gas Emissions by Year and Commodity Type
+
+```{r}
+emissions_year_commodity_summary <- sf_emissions %>% 
+  group_by(Calendar_Year, Commodity_Type) %>% 
+  summarize(Emissions_mtCO2e = n())
+```
+
+### 3.) Create a subset of data with observations from 2005 on, for only observations where sector_datail2 contains "PG&E", then limit columns to calendar year, sector detail, and emmitions mtCO2
+
+```{r}
+emissions_subset <- sf_emissions %>% 
+  filter(Calendar_Year >= 2005) %>% 
+  filter(str_detect(Sector_Detail2, pattern = "PG&E")) %>% 
+  select(Calendar_Year, Sector_Detail2, Emissions_mtCO2e)
+```
+
+
+
+```{r}
+
+colnames(sf_emissions)
+
+summary(sf_emissions$Emissions_mtCO2e)
+
+sf_emissions_unitconversion <- sf_emissions %>% 
+  mutate(Emissions_ktCO2e = Emissions_mtCO2e / 1000) %>% 
+  filter(Calendar_Year >= 2016)
+
+
+ggplot(data = sf_emissions_unitconversion, aes( y = fct_reorder(Sector_General, Emissions_ktCO2e), x = Emissions_ktCO2e)) +
+  geom_col(aes(fill = Sector_General), show.legend = FALSE) +
+  scale_fill_paletteer_d(palette = "colorblindr::OkabeIto") +
+  facet_wrap(~Calendar_Year, ncol = 2) +
+  theme(axis.text.x = element_text(size = 4),
+        axis.text.y = element_text(size = 4),
+        axis.title.x = element_text(size = 8, face = "bold"),
+        axis.title.y = element_text(size = 8, face = "bold"),
+        panel.grid.major = element_line(color = "white")) %>% 
+  labs(title = "San Francisco's CO2 Emissions by Sector, Years 2016-2019",
+       x = "CO2 Emissions (kilotons)",
+       y = "Sector")
+```
+

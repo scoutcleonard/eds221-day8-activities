@@ -1,0 +1,75 @@
+---
+title: "Space launch Data Visualizations"
+author: "Scout Leonard"
+date: "8/18/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(here)
+library(janitor)
+
+library(patchwork)
+library(ggrepel)
+library(gghighlight)
+library(paletteer)
+library(ggExtra)
+library(ggbeeswarm)
+
+space_launches <- read_csv(here::here("data", "space_launches.csv"))
+```
+## Make the 8 worst possible graphs! 
+
+```{r}
+ggplot(data = space_launches, aes(x = JD, y = type)) +
+  geom_col(aes(fill = agency)) +
+  labs(title = "a graph about stuff") +
+  theme(axis.title = element_text(color = "cyan4", size = 20))
+```
+
+```{r}
+ggplot(data = space_launches, aes(x = state_code, y = category)) +
+  geom_dotplot(aes(color = launch_year, fill = "yellow"))
+```
+
+```{r}
+ggplot(data = space_launches, aes(x = variant, y = agency)) +
+  geom_count(aes(fill = "pink")) +
+  theme(plot.background = element_rect(fill = "purple")) +
+  labs(title = "SPACE JAM")
+```
+
+```{r}
+ggplot(data = space_launches, aes(x = launch_year, y = type)) +
+  geom_text(aes(label = launch_date), color = "blue") +
+  theme(panel.grid.major.x = element_line(color = "yellow"),
+        panel.background = element_rect(fill = "orange"),
+        plot.background = element_rect(fill = "green"),
+        title = element_text(color = "cyan", size = 44)
+        ) +
+  labs(title = "HI")
+
+```
+
+```{r}
+agency_counts_faceted <- ggplot(data = space_launches, aes(x = agency_type)) +
+  geom_bar(fill = "yellowgreen") +
+  theme(panel.grid.minor.x = element_line(color = "red"),
+        panel.grid.major.y = element_line(color = "violetred4"),
+        panel.background = element_rect(fill = "salmon"),
+        title = element_text(color = "orange", size = 30),
+        plot.background = element_rect(fill = "saddlebrown"),
+        axis.text.x = element_text(color = "royalblue4"),
+        axis.text.y = element_text(color = "olivedrab1")) +
+  facet_wrap(~category) +
+  labs(title = "number of agency types in outer space?",
+       x = "AgEnCy",
+       y = "******COUNT******")
+
+agency_counts_faceted
+
+ggsave(here::here("figs", "agency_counts_faceted.png"), plot = agency_counts_faceted)
+```
